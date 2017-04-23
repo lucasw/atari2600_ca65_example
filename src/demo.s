@@ -6,6 +6,9 @@
 .segment "CODE"
 ;.org $F000
 Reset:
+; initialize the frame counter
+ldx #0
+stx $80
 StartOfFrame:
 ; Start of vertical blank processing
 lda #0
@@ -20,31 +23,38 @@ sta WSYNC
 lda #0
 sta VSYNC
 ; 37 scanlines of vertical blank...
+; TODO(lucasw) replace with loop
 .repeat 37
 sta WSYNC
 .endrepeat
 
 ; 192 scanlines of picture...
 
-; ldx #0
 inc $80 ; $80 will increment every frame
+; initialize the line counter $82
+ldx #192
+stx $82
 ldx $80
-.repeat 192 ; scanlines
-; show a different color on every line
-inx
-stx COLUBK
+stx $81
+scanline:
 sta WSYNC
-.endrepeat
+ldx $81
+stx COLUBK
+; show a different color on every line
+inc $81
+dec $82
+bne scanline
 
 lda #%01000010
 sta VBLANK                     ; end of screen - enter blanking
 ; 30 scanlines of overscan...
+; TODO(lucasw) replace with loop
 .repeat 30
 sta WSYNC
 .endrepeat
 jmp StartOfFrame
-; fill in the rest of the address space?
 .org $FFFA
+; fill in the rest of the address space?
 .segment "VECTORS" 
 .addr Reset ; NMI: should never occur 
 .addr Reset ; RESET 
