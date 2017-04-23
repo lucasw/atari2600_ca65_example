@@ -41,9 +41,18 @@ ldx $80
 stx $81
 scanline:
 sta WSYNC
+; change the color as the line advances
+;ldx #2
+;stx $83
+;linechange:
+;ldx $83
+;adc $81, x
+;sta COLUBK
+;dec $83
+;bne linechange
 ldx $81
 stx COLUBK
-; show a different color on every line
+; start with a different color on every line
 inc $81
 dec $82
 bne scanline
