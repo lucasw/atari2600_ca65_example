@@ -26,8 +26,11 @@ sta WSYNC
 
 ; 192 scanlines of picture...
 
-ldx #0
+; ldx #0
+inc $80 ; $80 will increment every frame
+ldx $80
 .repeat 192 ; scanlines
+; show a different color on every line
 inx
 stx COLUBK
 sta WSYNC
