@@ -24,9 +24,12 @@ lda #0
 sta VSYNC
 ; 37 scanlines of vertical blank...
 ; TODO(lucasw) replace with loop
-.repeat 37
+ldx #37
+stx $82
+verticalblank:
+dec $82
 sta WSYNC
-.endrepeat
+bne verticalblank
 
 ; 192 scanlines of picture...
 
@@ -49,9 +52,13 @@ lda #%01000010
 sta VBLANK                     ; end of screen - enter blanking
 ; 30 scanlines of overscan...
 ; TODO(lucasw) replace with loop
-.repeat 30
+ldx #30
+stx $82
+overscan:
+dec $82
 sta WSYNC
-.endrepeat
+bne overscan
+
 jmp StartOfFrame
 .org $FFFA
 ; fill in the rest of the address space?
