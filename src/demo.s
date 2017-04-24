@@ -3,12 +3,20 @@
 ; but needed to be adapted to ca65
 .setcpu "6502"
 .include "vcs.inc"
+
 .segment "CODE"
-;.org $F000
 Reset:
 ; initialize the frame counter
+FRAME_COUNT := $80
 ldx #0
-stx $80
+stx FRAME_COUNT
+; configure port a for input
+ldx #0
+stx SWACNT
+BK_COLOR := $81
+ldx #0
+stx BK_COLOR
+
 StartOfFrame:
 ; Start of vertical blank processing
 lda #0
@@ -24,21 +32,22 @@ lda #0
 sta VSYNC
 ; 37 scanlines of vertical blank...
 ; TODO(lucasw) replace with loop
+LINE_COUNT := $82
 ldx #37
-stx $82
+stx LINE_COUNT
+
 verticalblank:
-dec $82
+dec LINE_COUNT
 sta WSYNC
 bne verticalblank
 
 ; 192 scanlines of picture...
 
-inc $80 ; $80 will increment every frame
+inc FRAME_COUNT ; $80 will increment every frame
 ; initialize the line counter $82
 ldx #192
-stx $82
-ldx $80
-stx $81
+stx LINE_COUNT
+ldx FRAME_COUNT
 scanline:
 sta WSYNC
 ; change the color as the line advances
@@ -50,28 +59,50 @@ sta WSYNC
 ;sta COLUBK
 ;dec $83
 ;bne linechange
-ldx $81
+ldx BK_COLOR
 stx COLUBK
 ; start with a different color on every line
-inc $81
-dec $82
+dec LINE_COUNT
 bne scanline
+;inc BK_COLOR
 
 lda #%01000010
 sta VBLANK                     ; end of screen - enter blanking
 ; 30 scanlines of overscan...
-; TODO(lucasw) replace with loop
-ldx #30
-stx $82
+
+; spend first line checking input
+; the bit will be 0 when the direction is pressed
+check_up:
+lda #$10
+and SWCHA ; if up is not pressed, this will store 1 in accumulator, zero flag will be 0
+beq p0_up ; if zero flag is 1, that means up was pressed, then branch
+bne check_down ; TODO(lucasw) how to just go straight to a label without condition?
+p0_up:
+inc BK_COLOR
+
+check_down:
+lda #$20
+and SWCHA
+beq p0_down
+bne finish_line ; TODO(lucasw) how to just go straight to a label without condition?
+p0_down:
+dec BK_COLOR
+
+finish_line:
+sta WSYNC
+
+ldx #29
+stx LINE_COUNT
 overscan:
-dec $82
+dec LINE_COUNT
 sta WSYNC
 bne overscan
 
 jmp StartOfFrame
+
 .org $FFFA
 ; fill in the rest of the address space?
-.segment "VECTORS" 
+.segment "VECTORS"
 .addr Reset ; NMI: should never occur 
 .addr Reset ; RESET 
 .addr Reset ; IRQ: will only occur with brk 
