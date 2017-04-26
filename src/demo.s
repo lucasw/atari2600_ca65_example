@@ -41,15 +41,11 @@ PFB2 := $88
 ldx #$82
 stx PFB2
 
+; TODO(lucasw) how to store bytes in rom?
+; player 0 sprite
 GRP0_Y := $89
 ldx #25
 stx GRP0_Y
-GRP0A := $ff
-GRP0B := $18
-GRP0C := $7e
-GRP0D := $7e
-GRP0E := $18
-GRP0F := $ff
 
 ldx BK_COLOR
 stx COLUBK
@@ -99,13 +95,19 @@ sta WSYNC
 
 lda LINE_COUNT
 sbc GRP0_Y
-beq player0
+cmp #16
+bcc draw_player0
+; clear the player bits (don't draw a player)
 ldx #0
 stx GRP0
 jmp draw_playfield
-player0:
-ldx GRP0A
-stx GRP0
+draw_player0:
+; just did this above, maybe should store the value somewhere
+; instead of recalculating it?
+lda LINE_COUNT
+sbc GRP0_Y
+adc player_sprite_0
+sta GRP0
 
 draw_playfield:
 lda LINE_COUNT
@@ -171,6 +173,25 @@ sta WSYNC
 bne overscan
 
 jmp StartOfFrame
+
+.segment "RODATA"
+player_sprite_0:
+.byte $7e
+.byte $ff
+.byte $ff
+.byte $18
+.byte $18
+.byte $7e
+.byte $42
+.byte $52
+.byte $52
+.byte $42
+.byte $7e
+.byte $18
+.byte $18
+.byte $ff
+.byte $ff
+.byte $7e
 
 .org $FFFA
 ; fill in the rest of the address space?

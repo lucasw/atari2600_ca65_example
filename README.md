@@ -5,9 +5,11 @@ Stella Programmer's guid
 
 https://atariage.com/2600/programming/2600_101/docs/stella.html
 
-6502 assembly (sta, ldx, etc.):
+## 6502 assembly (sta, ldx, etc.)
 
-http://www.6502.org/tutorials/6502opcodes.html
+This actually explains the inputs and outputs for each opcode:
+
+https://www.dwheeler.com/6502/oneelkruns/6502sum.html
 
 ca65 Users Guide (how to format assembly, create variables):
 
