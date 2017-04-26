@@ -14,7 +14,7 @@ stx FRAME_COUNT
 ldx #0
 stx SWACNT
 BK_COLOR := $81
-ldx #0
+ldx #$89
 stx BK_COLOR
 
 PFA0 := $83
@@ -36,6 +36,9 @@ stx PFB1
 PFB2 := $88
 ldx #$82
 stx PFB2
+
+ldx BK_COLOR
+stx COLUBK
 
 StartOfFrame:
 ; Start of vertical blank processing
@@ -79,19 +82,31 @@ sta WSYNC
 ;sta COLUBK
 ;dec $83
 ;bne linechange
-ldx #5  ; PF_COLOR
-stx COLUPF
 
-; playfield
-ldx PFA0
+lda LINE_COUNT
+and #$04
+;sbc #188
+beq playfielda
+ldx #0
 stx PF0
-ldx PFA1
 stx PF1
-ldx PFA2
 stx PF2
+jmp finish_pf_line
 
-ldx BK_COLOR
-stx COLUBK
+playfielda:
+;lda #$02
+;and LINE_COUNT
+ldx #0  ; PF_COLOR
+stx COLUPF
+lda PFA0
+sta PF0
+lda PFA1
+sta PF1
+lda PFA2
+sta PF2
+jmp finish_pf_line
+
+finish_pf_line:
 ; start with a different color on every line
 dec LINE_COUNT
 bne scanline
