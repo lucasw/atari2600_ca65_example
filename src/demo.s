@@ -16,7 +16,11 @@ stx SWACNT
 BK_COLOR := $81
 ldx #$89
 stx BK_COLOR
+ldx #$6F
+stx COLUP0
 
+; TODO(lucasw) shouldn't store these in ram unless
+; they will be modified, how to store values- just := ?
 PFA0 := $83
 ldx #$10
 stx PFA0
@@ -36,6 +40,16 @@ stx PFB1
 PFB2 := $88
 ldx #$82
 stx PFB2
+
+GRP0_Y := $89
+ldx #25
+stx GRP0_Y
+GRP0A := $ff
+GRP0B := $18
+GRP0C := $7e
+GRP0D := $7e
+GRP0E := $18
+GRP0F := $ff
 
 ldx BK_COLOR
 stx COLUBK
@@ -84,6 +98,17 @@ sta WSYNC
 ;bne linechange
 
 lda LINE_COUNT
+sbc GRP0_Y
+beq player0
+ldx #0
+stx GRP0
+jmp draw_playfield
+player0:
+ldx GRP0A
+stx GRP0
+
+draw_playfield:
+lda LINE_COUNT
 and #$04
 ;sbc #188
 beq playfielda
@@ -124,7 +149,7 @@ and SWCHA ; if up is not pressed, this will store 1 in accumulator, zero flag wi
 beq p0_up ; if zero flag is 1, that means up was pressed, then branch
 bne check_down ; TODO(lucasw) how to just go straight to a label without condition?
 p0_up:
-;inc BK_COLOR
+inc GRP0_Y
 
 check_down:
 lda #$20
@@ -132,7 +157,7 @@ and SWCHA
 beq p0_down
 bne finish_line ; TODO(lucasw) how to just go straight to a label without condition?
 p0_down:
-;dec BK_COLOR
+dec GRP0_Y
 
 finish_line:
 sta WSYNC
