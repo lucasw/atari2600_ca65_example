@@ -17,6 +17,26 @@ BK_COLOR := $81
 ldx #0
 stx BK_COLOR
 
+PFA0 := $83
+ldx #$10
+stx PFA0
+PFA1 := $84
+ldx #$18
+stx PFA1
+PFA2 := $85
+ldx #$80
+stx PFA2
+
+PFB0 := $86
+ldx #$10
+stx PFB0
+PFB1 := $87
+ldx #$24
+stx PFB1
+PFB2 := $88
+ldx #$82
+stx PFB2
+
 StartOfFrame:
 ; Start of vertical blank processing
 lda #0
@@ -59,6 +79,17 @@ sta WSYNC
 ;sta COLUBK
 ;dec $83
 ;bne linechange
+ldx #5  ; PF_COLOR
+stx COLUPF
+
+; playfield
+ldx PFA0
+stx PF0
+ldx PFA1
+stx PF1
+ldx PFA2
+stx PF2
+
 ldx BK_COLOR
 stx COLUBK
 ; start with a different color on every line
@@ -78,7 +109,7 @@ and SWCHA ; if up is not pressed, this will store 1 in accumulator, zero flag wi
 beq p0_up ; if zero flag is 1, that means up was pressed, then branch
 bne check_down ; TODO(lucasw) how to just go straight to a label without condition?
 p0_up:
-inc BK_COLOR
+;inc BK_COLOR
 
 check_down:
 lda #$20
@@ -86,7 +117,7 @@ and SWCHA
 beq p0_down
 bne finish_line ; TODO(lucasw) how to just go straight to a label without condition?
 p0_down:
-dec BK_COLOR
+;dec BK_COLOR
 
 finish_line:
 sta WSYNC
