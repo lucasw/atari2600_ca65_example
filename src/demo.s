@@ -109,9 +109,10 @@ stx GRP0
 
 draw_playfield:
 lda LINE_COUNT
-and #$04
-;sbc #188
+; and #$04 ; draw alternating pf
+; sbc GRP0_Y ; draw pf on single line
 beq playfielda
+; clear playfield
 ldx #0
 stx PF0
 stx PF1
