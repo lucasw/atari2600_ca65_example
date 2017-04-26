@@ -11,6 +11,8 @@ This actually explains the inputs and outputs for each opcode:
 
 https://www.dwheeler.com/6502/oneelkruns/6502sum.html
 
+'sta $80, x' adds the $80 with the x register, loads that into the accumulator.
+
 ca65 Users Guide (how to format assembly, create variables):
 
 http://www.cc65.org/doc/ca65.html

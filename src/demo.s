@@ -6,6 +6,14 @@
 
 .segment "CODE"
 Reset:
+; clear all the ram
+ldx $80
+lda #0
+clear_ram:
+sta 0, x
+inx
+bne clear_ram
+
 ; initialize the frame counter
 FRAME_COUNT := $80
 ldx #0
@@ -41,7 +49,6 @@ PFB2 := $88
 ldx #$82
 stx PFB2
 
-; TODO(lucasw) how to store bytes in rom?
 ; player 0 sprite
 GRP0_Y := $89
 ldx #25
@@ -106,8 +113,10 @@ draw_player0:
 ; instead of recalculating it?
 lda LINE_COUNT
 sbc GRP0_Y
-adc player_sprite_0
-sta GRP0
+tax
+; TODO(lucasw) need to load the memory at the current accumulator value
+ldy player_sprite_0, x
+sty GRP0
 
 draw_playfield:
 lda LINE_COUNT
@@ -181,8 +190,8 @@ player_sprite_0:
 .byte $ff
 .byte $18
 .byte $18
+.byte $24
 .byte $7e
-.byte $42
 .byte $52
 .byte $52
 .byte $42
