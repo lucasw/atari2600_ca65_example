@@ -27,27 +27,13 @@ stx BK_COLOR
 ldx #$06
 stx COLUP0
 
-; TODO(lucasw) shouldn't store these in ram unless
-; they will be modified, how to store values- just := ?
-PFA0 := $83
-ldx #$10
-stx PFA0
-PFA1 := $84
-ldx #$18
-stx PFA1
-PFA2 := $85
-ldx #$80
-stx PFA2
-
-PFB0 := $86
-ldx #$10
-stx PFB0
-PFB1 := $87
-ldx #$24
-stx PFB1
-PFB2 := $88
-ldx #$82
-stx PFB2
+; a gap to fly through
+GAP1_Y := $83
+lda #25
+sta GAP1_Y
+GAP1_H := $84
+lda #50
+sta GAP1_H
 
 ; player 0 sprite
 GRP0_Y := $89
@@ -68,6 +54,8 @@ stx COLUBK
 ; reflect playfield
 lda #$01
 sta CTRLPF
+ldx #$10
+stx PF0
 lda #$04  ; PF_COLOR
 sta COLUPF
 
@@ -146,23 +134,20 @@ draw_playfield:
 ; sbc GRP0_Y ; draw pf on single line
 ;beq playfielda
 ; draw a border around the scree
-ldx #$10
-stx PF0
 ldx #$00
 stx PF1
+
+; draw the gap if it is her
+lda LINE_COUNT
+sbc GAP1_Y
+cmp GAP1_H
+bcc draw_gap
+ldx #$ff
 stx PF2
 jmp finish_pf_line
-
-playfielda:
-;lda #$02
-;and LINE_COUNT
-lda PFA0
-sta PF0
-lda PFA1
-sta PF1
-lda PFA2
-sta PF2
-jmp finish_pf_line
+draw_gap:
+ldx #$00
+stx PF2
 
 finish_pf_line:
 ; start with a different color on every line
