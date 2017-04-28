@@ -22,9 +22,9 @@ stx FRAME_COUNT
 ldx #0
 stx SWACNT
 BK_COLOR := $81
-ldx #$89
+ldx #$00
 stx BK_COLOR
-ldx #$6F
+ldx #$06
 stx COLUP0
 
 ; TODO(lucasw) shouldn't store these in ram unless
@@ -64,6 +64,12 @@ stx MISSILE_Y
 
 ldx BK_COLOR
 stx COLUBK
+
+; reflect playfield
+lda #$01
+sta CTRLPF
+lda #$04  ; PF_COLOR
+sta COLUPF
 
 StartOfFrame:
 ; Start of vertical blank processing
@@ -139,19 +145,17 @@ draw_playfield:
 ; and #$04 ; draw alternating pf
 ; sbc GRP0_Y ; draw pf on single line
 ;beq playfielda
-; clear playfield
-ldx #$80
-stx PF2
-ldx #$00
+; draw a border around the scree
+ldx #$10
 stx PF0
+ldx #$00
 stx PF1
+stx PF2
 jmp finish_pf_line
 
 playfielda:
 ;lda #$02
 ;and LINE_COUNT
-ldx #0  ; PF_COLOR
-stx COLUPF
 lda PFA0
 sta PF0
 lda PFA1
