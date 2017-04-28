@@ -57,6 +57,11 @@ stx GRP0_Y
 ; ldx #%00000000
 ; stx GRP0_X
 
+; missile 0
+MISSILE_Y := $90
+ldx #0
+stx MISSILE_Y
+
 ldx BK_COLOR
 stx COLUBK
 
@@ -110,23 +115,36 @@ bcc draw_player0
 ; clear the player bits (don't draw a player)
 ldx #0
 stx GRP0
-jmp draw_playfield
+jmp check_missile
 draw_player0:
 tax
 ; load the memory at the current accumulator value
 ldy player_sprite_0, x
 sty GRP0
 
-draw_playfield:
+check_missile:
 lda LINE_COUNT
+sbc MISSILE_Y
+beq draw_missile
+lda #$0
+sta ENAM0
+jmp draw_playfield
+
+draw_missile:
+lda #$2
+sta ENAM0
+
+draw_playfield:
+;lda LINE_COUNT
 ; and #$04 ; draw alternating pf
 ; sbc GRP0_Y ; draw pf on single line
-beq playfielda
+;beq playfielda
 ; clear playfield
-ldx #0
+ldx #$80
+stx PF2
+ldx #$00
 stx PF0
 stx PF1
-stx PF2
 jmp finish_pf_line
 
 playfielda:
@@ -148,6 +166,7 @@ dec LINE_COUNT
 bne scanline
 ;inc BK_COLOR
 
+;lda #%01000010
 lda #%01000010
 sta VBLANK                     ; end of screen - enter blanking
 ; 30 scanlines of overscan...
@@ -199,6 +218,22 @@ finish_line:
 sta WSYNC
 sta HMOVE
 
+; check joystick button
+lda INPT4
+bmi finish_lines
+; fire is pressed
+lda #%11100000
+sta HMM0
+; fire missile
+lda GRP0_Y
+adc #$8
+sta MISSILE_Y
+lda #$2
+sta RESMP0
+lda #$0
+sta RESMP0
+
+finish_lines:
 ldx #29
 stx LINE_COUNT
 overscan:
