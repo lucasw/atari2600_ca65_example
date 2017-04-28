@@ -200,7 +200,7 @@ p0_left:
 lda #%00010000
 sta HMP0
 ; can't move left and right at same time
-jmp finish_line
+jmp check_trigger
 
 check_right:
 lda #$80
@@ -209,18 +209,17 @@ beq p0_right
 ; don't move left/right
 lda #%00000000
 sta HMP0
-jmp finish_line ;
+jmp check_trigger
 p0_right:
 lda #%11110000
 sta HMP0
 
-finish_line:
+check_trigger:
 sta WSYNC
 sta HMOVE
 
-; check joystick button
 lda INPT4
-bmi finish_lines
+bmi check_collision
 ; fire is pressed
 lda #%11100000
 sta HMM0
@@ -233,8 +232,20 @@ sta RESMP0
 lda #$0
 sta RESMP0
 
+check_collision:
+sta WSYNC
+lda CXM0FB
+and #$80
+beq finish_collision
+lda #$2
+sta RESMP0
+
+finish_collision:
+; clear collisions
+sta CXCLR
+
 finish_lines:
-ldx #29
+ldx #28
 stx LINE_COUNT
 overscan:
 dec LINE_COUNT
