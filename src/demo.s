@@ -161,6 +161,7 @@ beq p0_up ; if zero flag is 1, that means up was pressed, then branch
 bne check_down ; TODO(lucasw) how to just go straight to a label without condition?
 p0_up:
 inc GRP0_Y
+inc GRP0_Y
 
 check_down:
 lda #$20
@@ -169,18 +170,18 @@ beq p0_down
 bne check_left ; TODO(lucasw) how to just go straight to a label without condition?
 p0_down:
 dec GRP0_Y
+dec GRP0_Y
 
 check_left:
 lda #$40
 and SWCHA
 beq p0_left
-; don't move left/right
-lda #%00000000
-sta HMP0
 jmp check_right ; TODO(lucasw) how to just go straight to a label without condition?
 p0_left:
-lda #%00100000
+lda #%00010000
 sta HMP0
+; can't move left and right at same time
+jmp finish_line
 
 check_right:
 lda #$80
@@ -191,7 +192,6 @@ lda #%00000000
 sta HMP0
 jmp finish_line ;
 p0_right:
-; lda #%11110000
 lda #%11110000
 sta HMP0
 
