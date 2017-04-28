@@ -53,6 +53,9 @@ stx PFB2
 GRP0_Y := $89
 ldx #25
 stx GRP0_Y
+; GRP0_X := $90
+; ldx #%00000000
+; stx GRP0_X
 
 ldx BK_COLOR
 stx COLUBK
@@ -102,19 +105,15 @@ sta WSYNC
 
 lda LINE_COUNT
 sbc GRP0_Y
-cmp #16
+cmp #17
 bcc draw_player0
 ; clear the player bits (don't draw a player)
 ldx #0
 stx GRP0
 jmp draw_playfield
 draw_player0:
-; just did this above, maybe should store the value somewhere
-; instead of recalculating it?
-lda LINE_COUNT
-sbc GRP0_Y
 tax
-; TODO(lucasw) need to load the memory at the current accumulator value
+; load the memory at the current accumulator value
 ldy player_sprite_0, x
 sty GRP0
 
@@ -167,12 +166,38 @@ check_down:
 lda #$20
 and SWCHA
 beq p0_down
-bne finish_line ; TODO(lucasw) how to just go straight to a label without condition?
+bne check_left ; TODO(lucasw) how to just go straight to a label without condition?
 p0_down:
 dec GRP0_Y
 
+check_left:
+lda #$40
+and SWCHA
+beq p0_left
+; don't move left/right
+lda #%00000000
+sta HMP0
+jmp check_right ; TODO(lucasw) how to just go straight to a label without condition?
+p0_left:
+lda #%00100000
+sta HMP0
+
+check_right:
+lda #$80
+and SWCHA
+beq p0_right
+; don't move left/right
+lda #%00000000
+sta HMP0
+jmp finish_line ;
+p0_right:
+; lda #%11110000
+lda #%11110000
+sta HMP0
+
 finish_line:
 sta WSYNC
+sta HMOVE
 
 ldx #29
 stx LINE_COUNT
@@ -185,22 +210,23 @@ jmp StartOfFrame
 
 .segment "RODATA"
 player_sprite_0:
-.byte $7e
-.byte $ff
-.byte $ff
-.byte $18
-.byte $18
-.byte $24
-.byte $7e
-.byte $52
-.byte $52
-.byte $42
-.byte $7e
-.byte $18
-.byte $18
-.byte $ff
-.byte $ff
-.byte $7e
+.byte $ff ; 0
+.byte $ff ; 1
+.byte $18 ; 2
+.byte $18 ; 3
+.byte $18 ; 4
+.byte $24 ; 5
+.byte $4a ; 6
+.byte $52 ; 7
+.byte $52 ; 8
+.byte $4a ; 9
+.byte $24 ; a
+.byte $18 ; b
+.byte $18 ; c
+.byte $18 ; d
+.byte $ff ; e
+.byte $ff ; f
+.byte $ff ; 0
 
 .org $FFFA
 ; fill in the rest of the address space?
