@@ -87,7 +87,7 @@ sta WSYNC
 
 position_player_0:
 lda GRP0_X ; the desired position
-ldx #$0 ; player 0 
+ldx #$0 ; player 0
 jsr PositionASpriteSubroutine
 
 lda #0
@@ -388,7 +388,7 @@ level_data:
 .org $FFFA
 ; fill in the rest of the address space?
 .segment "VECTORS"
-.addr Reset ; NMI: should never occur 
-.addr Reset ; RESET 
-.addr Reset ; IRQ: will only occur with brk 
+.addr Reset ; NMI: should never occur
+.addr Reset ; RESET
+.addr Reset ; IRQ: will only occur with brk
 
