@@ -27,6 +27,12 @@ stx BK_COLOR
 ldx #$06
 stx COLUP0
 
+; PLAYER0 := 0
+; PLAYER1 := 1
+; MISSILE0 := 2
+; MISSILE1 := 3
+; BALL := 4
+
 ; a gap to fly through
 GAP1_Y := $83
 lda #25
@@ -36,7 +42,10 @@ lda #50
 sta GAP1_H
 
 ; player 0 sprite
-GRP0_Y := $89
+GRP0_X := $89
+ldx #4
+stx GRP0_X
+GRP0_Y := $90
 ldx #25
 stx GRP0_Y
 ; GRP0_X := $90
@@ -44,7 +53,7 @@ stx GRP0_Y
 ; stx GRP0_X
 
 ; missile 0
-MISSILE_Y := $90
+MISSILE_Y := $91
 ldx #0
 stx MISSILE_Y
 
@@ -54,7 +63,8 @@ stx COLUBK
 ; reflect playfield
 lda #$01
 sta CTRLPF
-ldx #$10
+;ldx #$10
+ldx #$00
 stx PF0
 lda #$04  ; PF_COLOR
 sta COLUPF
@@ -67,9 +77,13 @@ lda #2
 sta VSYNC
 
 ; 3 scanlines of VSYNCH signal...
-.repeat 3
 sta WSYNC
-.endrepeat
+
+position_player_0:
+lda GRP0_X ; the desired position
+ldx #$0 ; player 0 
+jsr PositionASpriteSubroutine
+
 lda #0
 sta VSYNC
 ; 37 scanlines of vertical blank...
@@ -110,11 +124,17 @@ bcc draw_player0
 ldx #0
 stx GRP0
 jmp check_missile
+
 draw_player0:
+lda LINE_COUNT
+sbc GRP0_Y
 tax
 ; load the memory at the current accumulator value
 ldy player_sprite_0, x
 sty GRP0
+
+; skip missile for now
+jmp draw_playfield
 
 check_missile:
 lda LINE_COUNT
@@ -186,27 +206,33 @@ and SWCHA
 beq p0_left
 jmp check_right ; TODO(lucasw) how to just go straight to a label without condition?
 p0_left:
-lda #%00010000
-sta HMP0
+dec GRP0_X
 ; can't move left and right at same time
-jmp check_trigger
+jmp finish_move
 
 check_right:
 lda #$80
 and SWCHA
 beq p0_right
 ; don't move left/right
-lda #%00000000
-sta HMP0
-jmp check_trigger
+; lda #%00000000
+; sta HMP0
+jmp finish_move
 p0_right:
-lda #%11110000
-sta HMP0
+inc GRP0_X
+
+finish_move:
+inc GRP0_X
+inc GRP0_X
+sta WSYNC
+
+; go to next screen if on right edge
+lda GRP0_X
+sbc #160 ; the screen is 159 pixels wide
+bcc check_trigger
+sta GRP0_X
 
 check_trigger:
-sta WSYNC
-sta HMOVE
-
 lda INPT4
 bmi check_collision
 ; fire is pressed
@@ -222,12 +248,20 @@ lda #$0
 sta RESMP0
 
 check_collision:
+; missile edge of screen
 sta WSYNC
 lda CXM0FB
 and #$80
-beq finish_collision
+beq check_player_wall_collision
 lda #$2
 sta RESMP0
+
+check_player_wall_collision:
+lda CXP0FB
+and #$80
+beq finish_collision
+ldx #$04
+stx GRP0_X
 
 finish_collision:
 ; clear collisions
@@ -242,6 +276,27 @@ sta WSYNC
 bne overscan
 
 jmp StartOfFrame
+
+; http://atariage.com/forums/topic/75971-new-2600-programmer-confused-by-player-positioning/
+PositionASpriteSubroutine:
+   sta HMCLR
+   sec
+   sta WSYNC         ;                      begin line 1
+DivideLoop:
+   sbc #15
+   bcs DivideLoop    ;+4/5    4/ 9.../54
+
+   eor #7            ;+2      6/11.../56
+   asl
+   asl
+   asl
+   asl               ;+8     14/19.../64
+
+   sta HMP0,X     ;+5     19/24.../69
+   sta RESP0,X       ;+4     23/28/33/38/43/48/53/58/63/68/73
+   sta WSYNC         ;+3      0              begin line 2
+   sta HMOVE         ;+3
+   rts               ;+6      9
 
 .segment "RODATA"
 player_sprite_0:

@@ -1,7 +1,7 @@
 # atari2600_ca65_example
 atari 2600 ca65 example
 
-Stella Programmer's guid
+Stella Programmer's guide
 
 https://atariage.com/2600/programming/2600_101/docs/stella.html
 
