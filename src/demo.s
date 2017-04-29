@@ -27,19 +27,21 @@ stx BK_COLOR
 ldx #$06
 stx COLUP0
 
-; PLAYER0 := 0
-; PLAYER1 := 1
-; MISSILE0 := 2
-; MISSILE1 := 3
-; BALL := 4
-
+; TODO load these from level data
 ; a gap to fly through
 GAP1_Y := $83
 lda #25
 sta GAP1_Y
-GAP1_H := $84
+GAP2_Y := $84
+lda #30
+sta GAP2_Y
+
+GAP1_H := $85
 lda #50
 sta GAP1_H
+GAP2_H := $86
+lda #40
+sta GAP2_H
 
 ; player 0 sprite
 GRP0_X := $89
@@ -157,21 +159,28 @@ draw_playfield:
 ; and #$04 ; draw alternating pf
 ; sbc GRP0_Y ; draw pf on single line
 ;beq playfielda
-; draw a border around the scree
-ldx #$00
-stx PF1
 
-; draw the gap if it is her
+; TODO(lucasw) maybe a for loop would work here
+; draw the gap if it is here
+ldx #0
+
+gap_loop:
 lda LINE_COUNT
-sbc GAP1_Y
-cmp GAP1_H
+sbc GAP1_Y, x
+cmp GAP1_H, x
 bcc draw_gap
-ldx #$e0
-stx PF2
-jmp finish_pf_line
+ldy #$e0
+sty PF1, x
+jmp loop_end
 draw_gap:
-ldx #$00
-stx PF2
+ldy #$00
+sty PF1, x
+
+loop_end:
+dex
+bne finish_pf_line
+;jmp finish_pf_line
+jmp gap_loop
 
 finish_pf_line:
 ; start with a different color on every line
@@ -226,7 +235,7 @@ p0_right:
 inc GRP0_X
 
 finish_move:
-;inc GRP0_X
+inc GRP0_X
 ;inc GRP0_X
 sta WSYNC
 
@@ -254,10 +263,13 @@ sta GRP0_X
 ; TODO(lucasw) update the screen
 inc LEVEL
 lda LEVEL
-and #$07
+and #$0f
 tax
-ldy player_sprite_0, x
+ldy level_data, x
 sty GAP1_Y
+inx
+ldy level_data, x
+sty GAP2_Y
 
 check_trigger:
 lda INPT4
@@ -305,6 +317,14 @@ bne overscan
 jmp StartOfFrame
 
 ; http://atariage.com/forums/topic/75971-new-2600-programmer-confused-by-player-positioning/
+; a - x position
+; x - which player
+;   PLAYER0 := 0
+;   PLAYER1 := 1
+;   MISSILE0 := 2
+;   MISSILE1 := 3
+;   BALL := 4
+
 PositionASpriteSubroutine:
    sta HMCLR
    sec
@@ -344,7 +364,26 @@ player_sprite_0:
 .byte $ff ; e
 .byte $ff ; f
 .byte $ff ; 0
-; level_data:
+
+
+level_data:
+.byte 100
+.byte 100
+.byte 150
+.byte 50
+.byte 80
+.byte 30
+.byte 100
+.byte 150
+.byte 53
+.byte 80
+.byte 30
+.byte 5
+.byte 30
+.byte 50
+.byte 70
+.byte 90
+.byte 110
 
 .org $FFFA
 ; fill in the rest of the address space?
