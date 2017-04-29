@@ -45,7 +45,7 @@ sta GAP1_H
 GRP0_X := $89
 ldx #4
 stx GRP0_X
-GRP0_Y := $90
+GRP0_Y := $8a
 ldx #25
 stx GRP0_Y
 ; GRP0_X := $90
@@ -53,12 +53,16 @@ stx GRP0_Y
 ; stx GRP0_X
 
 ; missile 0
-MISSILE_Y := $91
+MISSILE_Y := $8b
 ldx #0
 stx MISSILE_Y
 
 ldx BK_COLOR
 stx COLUBK
+
+LEVEL := $8c
+ldx #80
+stx LEVEL
 
 ; reflect playfield
 lda #$01
@@ -162,7 +166,7 @@ lda LINE_COUNT
 sbc GAP1_Y
 cmp GAP1_H
 bcc draw_gap
-ldx #$ff
+ldx #$e0
 stx PF2
 jmp finish_pf_line
 draw_gap:
@@ -222,15 +226,38 @@ p0_right:
 inc GRP0_X
 
 finish_move:
-inc GRP0_X
-inc GRP0_X
+;inc GRP0_X
+;inc GRP0_X
 sta WSYNC
 
+lda GRP0_Y
+cmp #2
+bcs limit_max
+lda #2
+sta GRP0_Y
+jmp test_next_screen
+limit_max:
+lda GRP0_Y
+cmp #178
+bcc test_next_screen
+lda #178
+sta GRP0_Y
+
+test_next_screen:
 ; go to next screen if on right edge
 lda GRP0_X
 sbc #160 ; the screen is 159 pixels wide
 bcc check_trigger
+; reset position to zero
+lda #0
 sta GRP0_X
+; TODO(lucasw) update the screen
+inc LEVEL
+lda LEVEL
+and #$07
+tax
+ldy player_sprite_0, x
+sty GAP1_Y
 
 check_trigger:
 lda INPT4
@@ -317,6 +344,7 @@ player_sprite_0:
 .byte $ff ; e
 .byte $ff ; f
 .byte $ff ; 0
+; level_data:
 
 .org $FFFA
 ; fill in the rest of the address space?
