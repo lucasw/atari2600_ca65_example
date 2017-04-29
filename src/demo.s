@@ -169,7 +169,7 @@ draw_playfield:
 lda GAP_LOOP_IND
 and #$01
 tax
-;ldx #1
+ldx #1
 
 ; TODO(lucasw) instead of writing to
 ; the playfield every frame, only update
