@@ -66,6 +66,10 @@ LEVEL := $8c
 ldx #80
 stx LEVEL
 
+GAP_LOOP_IND := $8d
+ldx #$00
+stx GAP_LOOP_IND
+
 ; reflect playfield
 lda #$01
 sta CTRLPF
@@ -105,6 +109,7 @@ bne verticalblank
 
 ; 192 scanlines of picture...
 
+inc GAP_LOOP_IND
 inc FRAME_COUNT ; $80 will increment every frame
 ; initialize the line counter $82
 ldx #192
@@ -160,15 +165,22 @@ draw_playfield:
 ; sbc GRP0_Y ; draw pf on single line
 ;beq playfielda
 
-; TODO(lucasw) maybe a for loop would work here
 ; draw the gap if it is here
-ldx #0
+lda GAP_LOOP_IND
+and #$01
+tax
+;ldx #1
 
-gap_loop:
+; TODO(lucasw) instead of writing to
+; the playfield every frame, only update
+; it when it changes
 lda LINE_COUNT
 sbc GAP1_Y, x
-cmp GAP1_H, x
-bcc draw_gap
+beq draw_wall
+sbc GAP1_H, x
+beq draw_gap
+jmp loop_end
+draw_wall:
 ldy #$e0
 sty PF1, x
 jmp loop_end
@@ -177,10 +189,13 @@ ldy #$00
 sty PF1, x
 
 loop_end:
-dex
-bne finish_pf_line
-;jmp finish_pf_line
-jmp gap_loop
+;dex
+;beq finish_pf_line
+;inx
+;cpx #2
+;bcs finish_pf_line
+jmp finish_pf_line
+;jmp gap_loop
 
 finish_pf_line:
 ; start with a different color on every line
@@ -305,6 +320,7 @@ stx GRP0_X
 finish_collision:
 ; clear collisions
 sta CXCLR
+
 
 finish_lines:
 ldx #28
