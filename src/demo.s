@@ -37,10 +37,10 @@ lda #30
 sta GAP2_Y
 
 GAP1_H := $85
-lda #50
+lda #30
 sta GAP1_H
 GAP2_H := $86
-lda #40
+lda #80
 sta GAP2_H
 
 ; player 0 sprite
@@ -65,10 +65,6 @@ stx COLUBK
 LEVEL := $8c
 ldx #80
 stx LEVEL
-
-GAP_LOOP_IND := $8d
-ldx #$00
-stx GAP_LOOP_IND
 
 ; reflect playfield
 lda #$01
@@ -109,7 +105,6 @@ bne verticalblank
 
 ; 192 scanlines of picture...
 
-inc GAP_LOOP_IND
 inc FRAME_COUNT ; $80 will increment every frame
 ; initialize the line counter $82
 ldx #192
@@ -160,20 +155,14 @@ lda #$2
 sta ENAM0
 
 draw_playfield:
-;lda LINE_COUNT
-; and #$04 ; draw alternating pf
-; sbc GRP0_Y ; draw pf on single line
-;beq playfielda
-
 ; draw the gap if it is here
-lda GAP_LOOP_IND
-and #$01
-tax
-ldx #1
+; only 
 
 ; TODO(lucasw) instead of writing to
 ; the playfield every frame, only update
 ; it when it changes
+ldx #0
+clc
 lda LINE_COUNT
 sbc GAP1_Y, x
 beq draw_wall
@@ -183,10 +172,27 @@ jmp loop_end
 draw_wall:
 ldy #$e0
 sty PF1, x
-jmp loop_end
+; jmp loop_end
+jmp draw_playfield2
 draw_gap:
 ldy #$00
 sty PF1, x
+
+draw_playfield2:
+clc
+lda LINE_COUNT
+sbc GAP2_Y
+beq draw_wall2
+sbc GAP2_H
+beq draw_gap2
+jmp loop_end
+draw_wall2:
+ldy #$e0
+sty PF2
+jmp loop_end
+draw_gap2:
+ldy #$00
+sty PF2
 
 loop_end:
 ;dex
@@ -276,19 +282,12 @@ bcc check_trigger
 lda #0
 sta GRP0_X
 ; TODO(lucasw) update the screen
-inc LEVEL
-lda LEVEL
-and #$0f
-tax
-ldy level_data, x
-sty GAP1_Y
-inx
-ldy level_data, x
-sty GAP2_Y
+jsr load_next_level
 
 check_trigger:
 lda INPT4
-bmi check_collision
+;bmi check_collision
+bmi finish_collision
 ; fire is pressed
 lda #%11100000
 sta HMM0
@@ -331,6 +330,18 @@ sta WSYNC
 bne overscan
 
 jmp StartOfFrame
+
+load_next_level:
+inc LEVEL
+lda LEVEL
+and #$0f
+tax
+ldy level_data, x
+sty GAP1_Y
+inx
+ldy level_data, x
+sty GAP2_Y
+rts
 
 ; http://atariage.com/forums/topic/75971-new-2600-programmer-confused-by-player-positioning/
 ; a - x position
