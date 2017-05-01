@@ -108,6 +108,10 @@ jsr PositionASpriteSubroutine
 ; 9 scan lines of digit
 lda LEVEL
 and #$0f
+cmp #10
+bcc under_10
+sbc #10
+under_10:
 tax
 lda #0
 
@@ -125,9 +129,10 @@ init_draw_digit:
 sta MISC
 ldx #0
 draw_digit:
-lda digit_0, x
-clc
+txa
 adc MISC
+tay
+lda digit_0, y
 sta GRP1
 inx
 txa
