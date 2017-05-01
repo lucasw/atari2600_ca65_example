@@ -24,13 +24,17 @@ stx SWACNT
 BK_COLOR := $81
 ldx #$00
 stx BK_COLOR
+; player color
 ldx #$06
 stx COLUP0
+; digit color
+ldx #$36
+stx COLUP1
 
 ; TODO load these from level data
 ; a gap to fly through
 LEVEL := $8c
-ldx #80
+ldx #0
 stx LEVEL
 GAP1_Y := $83
 GAP2_Y := $84
@@ -54,6 +58,8 @@ MISSILE_Y := $8b
 ldx #0
 stx MISSILE_Y
 
+MISC := $8d
+
 ldx BK_COLOR
 stx COLUBK
 
@@ -66,6 +72,7 @@ stx PF0
 lda #$04  ; PF_COLOR
 sta COLUPF
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 StartOfFrame:
 ; Start of vertical blank processing
 lda #0
@@ -73,20 +80,17 @@ sta VBLANK
 lda #2
 sta VSYNC
 
-; 3 scanlines of VSYNCH signal...
+; need 3 scanlines of VSYNCH signal...
 sta WSYNC
-
-position_player_0:
-lda GRP0_X ; the desired position
-ldx #$0 ; player 0
-jsr PositionASpriteSubroutine
+sta WSYNC
+; third WSYNC
+sta WSYNC
 
 lda #0
 sta VSYNC
 ; 37 scanlines of vertical blank...
-; TODO(lucasw) replace with loop
 LINE_COUNT := $82
-ldx #37
+ldx #35
 stx LINE_COUNT
 
 verticalblank:
@@ -94,11 +98,58 @@ dec LINE_COUNT
 sta WSYNC
 bne verticalblank
 
+; draw number in first 8 scan lines
+lda #20 ; the desired position
+ldx #$1 ; player 1
+; this generates two WSYNCs, 36th and 37th vertical blank
+jsr PositionASpriteSubroutine
+
 ; 192 scanlines of picture...
+; 9 scan lines of digit
+lda LEVEL
+and #$0f
+tax
+lda #0
+
+;jmp init_draw_digit
+find_digit:
+; TODO handle 10-15
+cpx #0
+beq init_draw_digit
+dex
+clc
+adc #8
+jmp find_digit
+
+init_draw_digit:
+sta MISC
+ldx #0
+draw_digit:
+lda digit_0, x
+clc
+adc MISC
+sta GRP1
+inx
+txa
+cmp #9
+bcs setup_player
+sta WSYNC
+jmp draw_digit
+
+setup_player:
+; clear player 2
+ldy #$00
+sty GRP1
+; 9th and 10th scan line
+position_player_0:
+lda GRP0_X ; the desired position
+ldx #$0 ; player 0
+; this generates two WSYNCs
+jsr PositionASpriteSubroutine
 
 inc FRAME_COUNT ; $80 will increment every frame
 ; initialize the line counter $82
-ldx #192
+ldx #181
 stx LINE_COUNT
 ldx FRAME_COUNT
 scanline:
@@ -148,7 +199,7 @@ sta ENAM0
 draw_playfield:
 ; jmp draw_playfield2
 ; draw the gap if it is here
-; only 
+; only
 
 ; TODO(lucasw) instead of writing to
 ; the playfield every frame, only update
@@ -370,6 +421,98 @@ DivideLoop:
    rts               ;+6      9
 
 .segment "RODATA"
+digit_0:
+.byte %00000000
+.byte %00110000
+.byte %01001000
+.byte %10000100
+.byte %10000100
+.byte %10000100
+.byte %01001000
+.byte %00110000
+digit_1:
+.byte %00000000
+.byte %00010000
+.byte %00110000
+.byte %01110000
+.byte %00010000
+.byte %00010000
+.byte %00010000
+.byte %01111100
+digit_2:
+.byte %00000000
+.byte %00110000
+.byte %01001000
+.byte %00000100
+.byte %00000100
+.byte %00001000
+.byte %00110000
+.byte %01111100
+digit_3:
+.byte %00000000
+.byte %00110000
+.byte %01001000
+.byte %00000100
+.byte %00000100
+.byte %00011000
+.byte %00000100
+.byte %01001000
+.byte %00110000
+digit_4:
+.byte %00000000
+.byte %01000100
+.byte %01000100
+.byte %01111100
+.byte %00000100
+.byte %00000100
+.byte %00000100
+.byte %00000100
+digit_5:
+.byte %00000000
+.byte %01111100
+.byte %01000000
+.byte %01110000
+.byte %00001000
+.byte %00000100
+.byte %01000100
+.byte %01111000
+digit_6:
+.byte %00000000
+.byte %00011000
+.byte %00100100
+.byte %01000000
+.byte %01111000
+.byte %01000100
+.byte %01000100
+.byte %00111000
+digit_7:
+.byte %00000000
+.byte %01111100
+.byte %01000100
+.byte %00001000
+.byte %00010000
+.byte %00010000
+.byte %00010000
+.byte %00010000
+digit_8:
+.byte %00000000
+.byte %00111000
+.byte %01000100
+.byte %01000100
+.byte %00111000
+.byte %01000100
+.byte %01000100
+.byte %00111000
+digit_9:
+.byte %00000000
+.byte %00111000
+.byte %01000100
+.byte %00110100
+.byte %00000100
+.byte %00001000
+.byte %01001000
+.byte %00110000
+
 player_sprite_0:
 .byte $ff ; 0
 .byte $ff ; 1
