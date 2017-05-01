@@ -29,19 +29,14 @@ stx COLUP0
 
 ; TODO load these from level data
 ; a gap to fly through
+LEVEL := $8c
+ldx #80
+stx LEVEL
 GAP1_Y := $83
-lda #25
-sta GAP1_Y
 GAP2_Y := $84
-lda #30
-sta GAP2_Y
-
 GAP1_H := $85
-lda #30
-sta GAP1_H
 GAP2_H := $86
-lda #80
-sta GAP2_H
+jsr load_level
 
 ; player 0 sprite
 GRP0_X := $89
@@ -61,10 +56,6 @@ stx MISSILE_Y
 
 ldx BK_COLOR
 stx COLUBK
-
-LEVEL := $8c
-ldx #80
-stx LEVEL
 
 ; reflect playfield
 lda #$01
@@ -155,6 +146,7 @@ lda #$2
 sta ENAM0
 
 draw_playfield:
+; jmp draw_playfield2
 ; draw the gap if it is here
 ; only 
 
@@ -179,6 +171,7 @@ ldy #$00
 sty PF1, x
 
 draw_playfield2:
+;jmp loop_end
 clc
 lda LINE_COUNT
 sbc GAP2_Y
@@ -281,8 +274,9 @@ bcc check_trigger
 ; reset position to zero
 lda #0
 sta GRP0_X
-; TODO(lucasw) update the screen
-jsr load_next_level
+; update the level
+inc LEVEL
+jsr load_level
 
 check_trigger:
 lda INPT4
@@ -331,8 +325,7 @@ bne overscan
 
 jmp StartOfFrame
 
-load_next_level:
-inc LEVEL
+load_level:
 lda LEVEL
 and #$0f
 tax
@@ -341,6 +334,10 @@ sty GAP1_Y
 inx
 ldy level_data, x
 sty GAP2_Y
+ldy #50
+sty GAP1_H
+ldy #40
+sty GAP2_H
 rts
 
 ; http://atariage.com/forums/topic/75971-new-2600-programmer-confused-by-player-positioning/
