@@ -58,7 +58,10 @@ MISSILE_Y := $8b
 ldx #0
 stx MISSILE_Y
 
-MISC := $8d
+SOUND_COUNTER := $8d
+lda #0
+sta SOUND_COUNTER
+MISC := $8e
 
 ldx BK_COLOR
 stx COLUBK
@@ -348,6 +351,7 @@ check_player_wall_collision:
 lda CXP0FB
 and #$80
 beq no_collision
+; collision, start over
 ldx #$04
 stx GRP0_X
 lda #0
@@ -357,6 +361,19 @@ lda #$1e
 sta COLUBK
 lda #$0e
 sta COLUPF
+; death sound effect
+lda #$2
+sta AUDC0
+lda #$4
+sta AUDC1
+lda #$4
+sta AUDF0
+lda #$f
+sta AUDV0
+lda #$3
+sta AUDV1
+lda #10
+sta SOUND_COUNTER
 jmp finish_collision
 
 no_collision:
@@ -369,7 +386,6 @@ finish_collision:
 ; clear collisions
 sta CXCLR
 
-
 finish_lines:
 ldx #28
 stx LINE_COUNT
@@ -377,6 +393,8 @@ overscan:
 dec LINE_COUNT
 sta WSYNC
 bne overscan
+
+jsr update_sound
 
 jmp StartOfFrame
 
@@ -391,7 +409,7 @@ ldy level_data, x
 sty GAP2_Y
 ldy #50
 sty GAP1_H
-ldy #40
+ldy #50
 sty GAP2_H
 rts
 
@@ -423,6 +441,19 @@ DivideLoop:
    sta WSYNC         ;+3      0              begin line 2
    sta HMOVE         ;+3
    rts               ;+6      9
+
+update_sound:
+  lda SOUND_COUNTER
+  cmp #0
+  beq finish_sound
+  dec SOUND_COUNTER
+  rts
+finish_sound:
+  lda #0
+  sta AUDV0
+  lda #0
+  sta AUDV1
+  rts
 
 .segment "RODATA"
 digit_0:
