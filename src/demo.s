@@ -201,6 +201,7 @@ draw_missile:
 lda #$2
 sta ENAM0
 
+;;;;;;;;;;;;;;;
 draw_playfield:
 ; jmp draw_playfield2
 ; draw the gap if it is here
@@ -209,7 +210,7 @@ draw_playfield:
 ; TODO(lucasw) instead of writing to
 ; the playfield every frame, only update
 ; it when it changes
-ldx #0
+ldx #1
 clc
 lda LINE_COUNT
 sbc GAP1_Y, x
@@ -220,28 +221,11 @@ jmp loop_end
 draw_wall:
 ldy #$e0
 sty PF1, x
-; jmp loop_end
-jmp draw_playfield2
+jmp loop_end
+; jmp draw_playfield2
 draw_gap:
 ldy #$00
 sty PF1, x
-
-draw_playfield2:
-;jmp loop_end
-clc
-lda LINE_COUNT
-sbc GAP2_Y
-beq draw_wall2
-sbc GAP2_H
-beq draw_gap2
-jmp loop_end
-draw_wall2:
-ldy #$e0
-sty PF2
-jmp loop_end
-draw_gap2:
-ldy #$00
-sty PF2
 
 loop_end:
 ;dex
@@ -306,7 +290,7 @@ inc GRP0_X
 
 finish_move:
 inc GRP0_X
-;inc GRP0_X
+inc GRP0_X
 sta WSYNC
 
 lda GRP0_Y
@@ -337,7 +321,8 @@ jsr load_level
 check_trigger:
 lda INPT4
 ;bmi check_collision
-bmi finish_collision
+;bmi finish_collision
+bmi check_player_wall_collision
 ; fire is pressed
 lda #%11100000
 sta HMM0
@@ -365,6 +350,9 @@ and #$80
 beq finish_collision
 ldx #$04
 stx GRP0_X
+lda #0
+sta LEVEL
+jsr load_level
 
 finish_collision:
 ; clear collisions
@@ -387,7 +375,7 @@ and #$0f
 tax
 ldy level_data, x
 sty GAP1_Y
-inx
+; inx
 ldy level_data, x
 sty GAP2_Y
 ldy #50
@@ -539,23 +527,22 @@ player_sprite_0:
 
 
 level_data:
-.byte 100
-.byte 100
-.byte 150
-.byte 50
-.byte 80
-.byte 30
-.byte 100
-.byte 150
-.byte 53
-.byte 80
-.byte 30
-.byte 5
-.byte 30
-.byte 50
-.byte 70
-.byte 90
-.byte 110
+.byte 100 ; 0
+.byte 100 ; 1
+.byte 120 ; 2
+.byte 50  ; 3
+.byte 80  ; 4
+.byte 30  ; 5
+.byte 100 ; 6
+.byte 90 ; 7
+.byte 53  ; 8
+.byte 80  ; 9
+.byte 30  ; a
+.byte 5   ; b
+.byte 30  ; c
+.byte 50  ; d
+.byte 70  ; e
+.byte 90  ; f
 
 .org $FFFA
 ; fill in the rest of the address space?
