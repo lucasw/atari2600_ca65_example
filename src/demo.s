@@ -347,12 +347,23 @@ sta RESMP0
 check_player_wall_collision:
 lda CXP0FB
 and #$80
-beq finish_collision
+beq no_collision
 ldx #$04
 stx GRP0_X
 lda #0
 sta LEVEL
 jsr load_level
+lda #$1e
+sta COLUBK
+lda #$0e
+sta COLUPF
+jmp finish_collision
+
+no_collision:
+lda BK_COLOR
+sta COLUBK
+lda #$04  ; PF_COLOR
+sta COLUPF
 
 finish_collision:
 ; clear collisions
