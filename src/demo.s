@@ -144,7 +144,10 @@ bcs setup_player
 sta WSYNC
 jmp draw_digit
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 setup_player:
+
+
 ; clear player 2
 ldy #$00
 sty GRP1
@@ -179,6 +182,7 @@ bcc draw_player0
 ; clear the player bits (don't draw a player)
 ldx #0
 stx GRP0
+
 jmp check_missile
 
 draw_player0:
@@ -379,7 +383,10 @@ jmp finish_collision
 no_collision:
 lda BK_COLOR
 sta COLUBK
-lda #$04  ; PF_COLOR
+lda LEVEL
+and #$03
+asl
+adc #$04  ; PF_COLOR
 sta COLUPF
 
 finish_collision:
