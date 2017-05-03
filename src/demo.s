@@ -177,6 +177,7 @@ sta WSYNC
 
 lda LINE_COUNT
 sbc GRP0_Y
+tax ; store this for use in draw player
 cmp #17
 bcc draw_player0
 ; clear the player bits (don't draw a player)
@@ -186,9 +187,17 @@ stx GRP0
 jmp check_missile
 
 draw_player0:
-lda LINE_COUNT
-sbc GRP0_Y
-tax
+txa
+cmp #4
+bcc draw_player_darker
+cmp #12
+bcs draw_player_darker
+lda #$0a
+jmp finish_draw_player
+draw_player_darker:
+lda #$06
+finish_draw_player:
+sta COLUP0
 ; load the memory at the current accumulator value
 ldy player_sprite_0, x
 sty GRP0
@@ -296,8 +305,8 @@ p0_right:
 inc GRP0_X
 
 finish_move:
-inc GRP0_X
-inc GRP0_X
+;inc GRP0_X
+;inc GRP0_X
 sta WSYNC
 
 lda GRP0_Y
